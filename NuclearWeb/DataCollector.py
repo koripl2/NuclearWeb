@@ -25,7 +25,9 @@ class DataCollector(object):
         '''self.printData(self.x)'''
         '''self.findMax()'''
         self.X = np.array(self.X)
+        print(self.X)
         self.y = np.array(self.y)
+        print(self.y)
         self.standarization()
         '''print(self.d)
         self.printData(self.x)'''

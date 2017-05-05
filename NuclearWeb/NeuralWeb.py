@@ -51,8 +51,8 @@ class NeuralNetMLP(object):
       Sum of squared errors after each epoch.
 
     """
-    def __init__(self, n_output=1, n_features=13, n_hidden=5,
-                 l1=0.0, l2=0.0, epochs=500, eta=0.001,
+    def __init__(self, n_output=1, n_features=13, n_hidden=8,
+                 l1=0.0, l2=0.0, epochs=1000, eta=0.001,
                  alpha=0.0, decrease_const=0.0, shuffle=False,
                  minibatches=1, random_state=None):
 
@@ -176,7 +176,7 @@ class NeuralNetMLP(object):
         """
         term1 = -d * (np.log(output))
         term2 = (1.0 - d) * np.log(1.0 - output)
-        cost = np.sum(term1 - term2)
+        cost = (np.sum(term1 - term2)/len(d))
         L1_term = self._L1_reg(self.l1, w1, w2)
         L2_term = self._L2_reg(self.l2, w1, w2)
         cost = cost + L1_term + L2_term
@@ -245,7 +245,7 @@ class NeuralNetMLP(object):
                                  '\nor X[[i]] for 1-sample classification')
 
         a1, z2, a2, z3, a3 = self._feedforward(X, self.w1, self.w2)
-        y_pred = np.argmax(z3, axis=0)
+        y_pred = a3
         return y_pred
 
     def fit(self, X, y, print_progress=True):
@@ -268,7 +268,6 @@ class NeuralNetMLP(object):
         """
         self.cost_ = []
         X_data, y_data = X.copy(), y.copy()
-
         delta_w1_prev = np.zeros(self.w1.shape)
         delta_w2_prev = np.zeros(self.w2.shape)
 
@@ -285,13 +284,13 @@ class NeuralNetMLP(object):
                 idx = np.random.permutation(y_data.shape[0]) #wybiera losowy wiersz
                 X_data, y_data = X_data[idx], y_data[:, idx] # [idx] - wybiera wylosowany wiersz,
                 #  [:,x] - wybiera wylosowana kolumne
-
+            
             mini = np.array_split(range(y_data.shape[0]), self.minibatches)#od parametru minibatches zalezy czy
             #  uaktualiamy po kazdej probce, czy po grupie probek
-
             for idx in mini:
 
                 # feedforward
+                #print(X_data[idx])
                 a1, z2, a2, z3, a3 = self._feedforward(X_data[idx],
                                                        self.w1,
                                                        self.w2)
