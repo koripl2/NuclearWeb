@@ -25,9 +25,7 @@ class DataCollector(object):
         '''self.printData(self.x)'''
         '''self.findMax()'''
         self.X = np.array(self.X)
-        print(self.X)
         self.y = np.array(self.y)
-        print(self.y)
         self.standarization()
         '''print(self.d)
         self.printData(self.x)'''
@@ -51,7 +49,7 @@ class DataCollector(object):
             max_value_y = self.y.max()
             for j in range(len(self.X)):
                 self.X[j][i] = self.X[j][i] / max_value_X
-        self.y = self.y / max_value_y
+        self.y = self.y / max_value_y / 1.05
 
     def getX(self):
         return self.X
