@@ -52,8 +52,8 @@ class NeuralNetMLP(object):
 
     """
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
-                 l1=0.0, l2=0.0, epochs=1000, eta=0.001,
-                 alpha=0.5, decrease_const=0.0, shuffle=True,
+                 l1=0.0, l2=0.0, epochs=1000, eta=0.0012,
+                 alpha=0.4, decrease_const=0.0, shuffle=True,
                  minibatches=1, random_state=None):
 
         np.random.seed(random_state)
@@ -311,8 +311,4 @@ class NeuralNetMLP(object):
                 self.w1 -= (delta_w1 + (self.alpha * delta_w1_prev))
                 self.w2 -= (delta_w2 + (self.alpha * delta_w2_prev))
                 delta_w1_prev, delta_w2_prev = delta_w1, delta_w2
-        plt.plot(self.cost_)
-        plt.xlabel('Epochs')
-        plt.ylabel('Cost function value')
-        plt.show()
         return self
