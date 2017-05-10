@@ -33,7 +33,7 @@ class DataCollector(object):
       
 
     def standarization(self):
-        """Standaryzacja danych i wynikow do zakresu [0;1]
+        """Standaryzacja danych i wynikow do zakresu [0;0.95]
 
         Parametry
         -----------

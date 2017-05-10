@@ -1,8 +1,4 @@
 
-
-import numpy as np
-import matplotlib.pyplot as plt
-
 import numpy as np
 from DataCollector import DataCollector
 from NeuralWeb import NeuralNetMLP
@@ -10,13 +6,9 @@ import matplotlib.pyplot as plt
 
 
 def main():
-        data_collector = DataCollector()
-       
-        net = NeuralNetMLP(n_hidden=8,  epochs =1000,alpha=0.04)
 
         data_collector = DataCollector()
-
-        net = NeuralNetMLP(n_hidden=8,  epochs =1000)
+        net = NeuralNetMLP(n_hidden=8,  epochs =1000, alpha=0.4)
         net.fit(data_collector.X[0:350], data_collector.y[0:350])
         y_calibr = data_collector.y[350:]
         
@@ -36,7 +28,7 @@ def main():
         plt.ylabel('Srednia wartosc funkcji kosztu (kross entropii)')
         plt.show()
         plt.plot(y_calibr*data_collector.getMaxY(), color='green')
-        plt.plot(y_net[0][350:]*data_collector.getMaxY(), color='blue')
+        plt.plot(y_net[0][350:]*data_collector.getMaxY()*1.05, color='blue')
         plt.legend(["Wartosc dokladna", "Wartosc przewidywana"])
         plt.title("Porownanie wartosci na wyjsciu sieci z wartosciami oczekiwanymi")
         plt.xlabel('Numer wektora')

@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.special import expit
 import sys
-import matplotlib.pyplot as plt
 
 class NeuralNetMLP(object):
     """ Siec do przewidywania ceny nieruchomosci na podstawie 13 parametrow
@@ -30,7 +29,8 @@ class NeuralNetMLP(object):
 
     """
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
-                 epochs=1000, eta=0.0015, alpha=0.0):
+                 epochs=1000, eta=0.0015, alpha=0.0):
+
         np.random.seed(0)
         self.n_output = n_output
         self.n_features = n_features
@@ -38,7 +38,8 @@ class NeuralNetMLP(object):
         self.w1, self.w2 = self._initialize_weights()
         self.epochs = epochs
         self.eta = eta
-        self.alpha = alpha
+        self.alpha = alpha
+
 
     def _initialize_weights(self):
         """Inicjalizuje wagi wartosciami losowymi o rozkladzie jednostajnym na przedziala [-1;1]"""
@@ -169,7 +170,11 @@ class NeuralNetMLP(object):
         delta_w2 : zmiana wag warstwy wyjsciowej.
 
         """
-        # propagacja wsteczn
+        # propagacja wsteczna
+        # pochodna funkcji kosztu wzgledem danej wagi  pomiedzy warstwa i oraz j
+        # moze byc przedstawiona jako sigma_j*a_i
+
+        #wartosci sigm zgodne ze wzorami
         sigma3 = a3 - d
         z2 = self._add_bias_unit(z2, how='row')
         sigma2 = w2.T.dot(sigma3) * self._sigmoid_gradient(z2)
@@ -231,8 +236,7 @@ class NeuralNetMLP(object):
                 sys.stderr.write('\rEpoch: %d/%d' % (i+1, self.epochs))
                 sys.stderr.flush()
             
-            for_vector = np.array_split(range(y_data.shape[0]),1)#od parametru minibatches zalezy czy
-            #  uaktualiamy po kazdej probce, czy po grupie probek
+            for_vector = np.array_split(range(y_data.shape[0]), 1)
             for j in for_vector:
                 # Uczymy
                 #print(X_data[idx])
@@ -245,7 +249,7 @@ class NeuralNetMLP(object):
                 # Propagacja wsteczna
                 delta_w1, delta_w2 = self._get_gradient(a1, a2,a3, z2, y_data[j],self.w1,self.w2)
 
-                #Nowe wagi - z uwzglêdnieniem bezwladnosci: za *
+                #Nowe wagi - z uwzglednieniem bezwladnosci: za *
                 self.w1 -= (delta_w1 + (self.alpha * delta_w1_prev))
                 self.w2 -= (delta_w2 + (self.alpha * delta_w2_prev))
                 #Wartosci do bezwladnosci
