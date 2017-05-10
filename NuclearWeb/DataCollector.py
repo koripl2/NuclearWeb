@@ -1,47 +1,49 @@
 import csv as csv
 import numpy as np
 from numpy import double
-'''
-Created on 20.04.2017
 
-@author: Konrad
-from test.test_zipfile import DATAFILES_DIR
-'''
 
 class DataCollector(object):
-    '''
-    classdocs
-    '''
+    """ Klasa pobierania danych
+
+    Parametry
+    ------------
+    -
+    Atrybuty
+    -----------
+    X : 13 parametrow opisujacych nieruchomosci - na wyjsciu unormowane!
+    y: Wartosc nieruchomosci - na wyjsciu unormowana! 
+    maxY: Wartosc maksymalna [nieunormowana] nieruchomosci.
+    titles: Naglowki kolumn
+    """
 
     def __init__(self):
         self.X=[]
         self.y=[]
+        self.maxY=[]
         self.dataFile=open('snbDANE.csv','r')
         dataReader = csv.reader(self.dataFile)
         self.titles = next(dataReader)
         for row in dataReader:
             self.X.append(list(map(double, row[0:len(row) - 1])))
             self.y.append(double(row[len(row) - 1]))
-        '''self.printData(self.x)'''
-        '''self.findMax()'''
         self.X = np.array(self.X)
         self.y = np.array(self.y)
         self.standarization()
-        '''print(self.d)
-        self.printData(self.x)'''
-
-    def findMax(self):
-        max=[]
-        for i in range(len(self.X[0])):
-            a = np.array(self.X, dtype=double)
-            max.append(a[:,i].max())
-        '''print(max)'''
-
-    def printData(self,data):
-        for i in range(len(data)):
-            print(data[i][:])
+      
 
     def standarization(self):
+        """Standaryzacja danych i wynikow do zakresu [0;1]
+
+        Parametry
+        -----------
+        Obiekt klasy
+
+        Zwraca
+        ----------
+        Znormalizowane dane i wyniki
+
+        """
         for i in range(len(self.X[0])):
             #X_array = np.array(self.X, dtype=double)
             #y_array = np.array(self.y, dtype=double)
@@ -49,6 +51,7 @@ class DataCollector(object):
             max_value_y = self.y.max()
             for j in range(len(self.X)):
                 self.X[j][i] = self.X[j][i] / max_value_X
+        self.maxY = max_value_y
         self.y = self.y / max_value_y / 1.05
 
     def getX(self):
@@ -60,3 +63,6 @@ class DataCollector(object):
 
     def getHeads(self):
         return self.titles
+    
+    def getMaxY(self):
+        return self.maxY
