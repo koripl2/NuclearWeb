@@ -13,6 +13,10 @@ def main():
         data_collector = DataCollector()
        
         net = NeuralNetMLP(n_hidden=8,  epochs =1000,alpha=0.04)
+
+        data_collector = DataCollector()
+
+        net = NeuralNetMLP(n_hidden=8,  epochs =1000)
         net.fit(data_collector.X[0:350], data_collector.y[0:350])
         y_calibr = data_collector.y[350:]
         

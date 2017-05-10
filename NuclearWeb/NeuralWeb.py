@@ -7,24 +7,30 @@ class NeuralNetMLP(object):
     """ Siec do przewidywania ceny nieruchomosci na podstawie 13 parametrow
 
     Parametry
-    ------------
-    n_output : Liczba neuronow wyjsciowych - 1 (tyle ile zmiennych objasniajacych
-    n_features : Liczba parametrow wejsciowych
-    n_hidden : Liczba neuronow w warstwie ukrytej
-    epochs : Liczba krokow algorytmu uczacego - standardowo: 1000
-    eta : Wspolczynnik szybkosci uczenia - standardowo: 0.0015
-    alpha :Wspolczynnik bezwladnosci - standardowo: 0.0
-        w(t) := w(t) - (grad(t) + alpha*grad(t-1))
+    -----------
+    n_output : int
+        Liczba neuronow wyjsciowych - 1 (tyle ile wynikow
+    n_features : int
+        Liczba parametrow wejsciowych
+    n_hidden : int (default: 8)
+        Liczba neuronow w warstwie ukrytej
+    epochs : int (default: 1000)
+        Liczba krokow algorytmu uczacego
+    eta : float (default: 0.0015)
+        Wspolczynnik szybkosci uczenia
+    alpha : float (default: 0.0)
+        Wspolczynnik bezwladnosci
+        w(t) := w(t) - (grad(t) + alpha*grad(t-1)
+
 
     Atrybuty
     -----------
-    j.w + 
-    cost_ : Przechowuje srednia wartosc funkcji kosztu w kolejnych iteracjach
+    cost_ : list
+      Przechowuje srednia wartosc funkcji kosztu w kolejnych iteracjach
 
     """
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
-                 epochs=1000, eta=0.0016, alpha=0.0):
-
+                 epochs=1000, eta=0.0015, alpha=0.0):
         np.random.seed(0)
         self.n_output = n_output
         self.n_features = n_features
@@ -32,12 +38,16 @@ class NeuralNetMLP(object):
         self.w1, self.w2 = self._initialize_weights()
         self.epochs = epochs
         self.eta = eta
-        self.alpha = alpha
-
+        self.alpha = alpha
 
     def _initialize_weights(self):
         """Inicjalizuje wagi wartosciami losowymi o rozkladzie jednostajnym na przedziala [-1;1]"""
+
         w1 = np.random.uniform(-1.0, 1.0,self.n_hidden*(self.n_features + 1))#rozkład jednostajny
+
+        w1 = np.random.uniform(-1.0, 1.0,
+                               size=self.n_hidden*(self.n_features + 1)) #rozkład jednostajny
+
         w1 = w1.reshape(self.n_hidden, self.n_features + 1) #z wektora formuje macierz o zadanych ksztaltach
         # w1 jest macierza wag, pierwsza wspolrzedna - do ktorego neuronu z warstwy ukrytej
         #druga - od ktorego wejscia
@@ -74,17 +84,25 @@ class NeuralNetMLP(object):
 
         Parametry
         -----------
-        X : Warstwa wejsciowa
-        w1 : Wagi polaczen w.wejsciowa-ukryta
-        w2 : Wagi polaczen w.ukryta-wyjsciowa
+        X : array, shape = [n_samples, n_features]
+            Warstwa wejsciowa
+        w1 : array, shape = [n_hidden_units, n_features]
+            Wagi polaczen w.wejsciowa-ukryta
+        w2 : array, shape = [n_output_units, n_hidden_units]
+            Wagi polaczen w.ukryta-wyjsciowa
 
         Zwraca
         ----------
-        a1 : Wartosci wejscia wraz z polaryzacja
-        z2 : Wejscie warstwy ukrytej
-        a2 : Aktywacja warstwy ukrytej - jej wyjscie
-        z3 : Wejscie neuronu wyjsciowego
-        a3 : Aktywacja neuronu wyjsciowego - wyjscie ostateczne
+        a1 : array, shape = [n_samples, n_features+1]
+            Wartosci wejscia wraz z polaryzacja
+        z2 : array, shape = [n_hidden, n_samples]
+            Wejscie warstwy ukrytej
+        a2 : array, shape = [n_hidden+1, n_samples]
+            Aktywacja warstwy ukrytej - jej wyjscie
+        z3 : array, shape = [1, n_samples]
+            Wejscie neuronu wyjsciowego
+        a3 : array, shape = [n_output_units, n_samples]
+            Aktywacja neuronu wyjsciowego - wyjscie ostateczne
 
         """
         a1 = self._add_bias_unit(X, 'column')
@@ -100,17 +118,24 @@ class NeuralNetMLP(object):
         """Oblicza wartosc funkcji kosztu korzystajac z funkcji kross entropii
 
         Parametry
-        ----------
-        d : Wartosci danych wynikow dla poszczegolnych wektorow uczacych.
-        output : Wartosc na wyjsciu sieci.    
-        w1 :Wagi od warstwy wejsciowej do ukrytej.
-        w2 : Wagi od warstwy ukrytej do wyjsciowej.
+        ---------
+        d : array, shape = (1, n_samples)
+             Wartosci pozadane dla poszczegolnych wektorow uczacych.
+        output : array, shape = (1, n_samples)
+             Wartosc na wyjsciu sieci.    
+        w1 : array, shape = [n_hidden_units, n_features]
+            Wagi od warstwy wejsciowej do ukrytej.
+        w2 : array, shape = [n_output_units, n_hidden_units]
+            Wagi od warstwy ukrytej do wyjsciowej.
+
 
         Zwraca
-        ---------
-        cost : wartosc funkcji kosztu dla wektora
+        --------
+        cost : float
+         wartosc funkcji kosztu dla wektora
 
         """
+
         term1 = -d * (np.log(output)) #cross-entropia lewo
         term2 = (1.0 - d) * np.log(1.0 - output) #cross entropia prawo
         cost = (np.sum(term1 - term2)/len(d)) #blad sredni
@@ -121,23 +146,32 @@ class NeuralNetMLP(object):
 
         Parametry
         ------------
-        a1 : Wartosci wejscia wraz z polaryzacja 
-        a2 : Wyjscie warstwy ukrytej - aktywacja
-        a3 : Wyjscie neuronu wyjsciowego - aktywacja
-        z2 : Wejscie warstwy ukrytej
-        z3 : Wejscie neuronu wyjsciowego  
-        d : Wartosci nieruchomosci [unromowane] dla poszczegolnych wektorow uczacych.
-        w1 : Wagi od warstwy wejsciowej do ukrytej.
-        w2 : Wagi od warstwy ukrytej do wyjsciowej.
+
+        a1 : array, shape = [n_samples, n_features+1]
+            Wartosci wejscia wraz z polaryzacja 
+        a2 : array, shape = [n_hidden+1, n_samples]
+            Wyjscie warstwy ukrytej
+        a3 : array, shape = [n_output_units, n_samples]
+            Wyjscie neuronu wyjsciowego
+        z2 : array, shape = [n_hidden, n_samples]
+            Wyjsie warstwy wejsciowej
+        z3 : array, shape = [1, n_samples]
+            Wejscie neuronu wyjsciowego  
+        d : array, shape = (1, n_samples)
+             Wartosci pozadane dla poszczegolnych wektorow uczacych.
+        w1 : array, shape = [n_hidden_units, n_features]
+            Wagi od warstwy wejsciowej do ukrytej.
+        w2 : array, shape = [n_output_units, n_hidden_units]
+            Wagi od warstwy ukrytej do wyjsciowej.
         Zwraca
         ---------
         delta_w1 : zmiana wag warstwy ukrytej.
         delta_w2 : zmiana wag warstwy wyjsciowej.
 
         """
-        # propagacja wsteczna
-        sigma3 = a3 - d #blad wyjscia
-        z2 = self._add_bias_unit(z2, 'row') 
+        # propagacja wsteczn
+        sigma3 = a3 - d
+        z2 = self._add_bias_unit(z2, how='row')
         sigma2 = w2.T.dot(sigma3) * self._sigmoid_gradient(z2)
         sigma2 = sigma2[1:, :] #w2.T.dot(sigma3) - blad warstwy ukrytej,
         #pomnozone przez gradient f.akt dla liczenia zmian wag
@@ -147,16 +181,22 @@ class NeuralNetMLP(object):
 
         return delta_w1, delta_w2
 
+
     def predict(self, X):
         """Wyznacza unormowana wartosc ceny nieruchomosci dla zadanego wektora wejsciowego
 
         Parametry
         -----------
-        X : Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
+
+        X : array, shape = [n_samples, n_features]
+            Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
+
 
         Zwraca:
         ----------
-        a3 : Przewidywana cena.
+
+        a3 : array, shape = [n_samples]
+            Przewidywana cena.
 
         """
 
@@ -168,11 +208,14 @@ class NeuralNetMLP(object):
 
         Parametry
         -----------
-        X : Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
-        y : Docelowe wartosci warstwy wyjsciowej.
-        print_progress : Drukuje lub nie na wyjsciu bledow ile probek zostalo przetworzonych
 
-        Zwraca:
+        X : array, shape = [n_samples, n_features]
+            Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
+        y : array, shape = [n_samples]
+            Docelowe wartosci warstwy wyjsciowej.
+        print_progress : bool (default: False)
+            Drukuje na wyjsciu bledow ile probek zostalo przetworzonych
+
         ----------
         -
 
