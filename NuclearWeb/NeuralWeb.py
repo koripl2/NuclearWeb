@@ -54,6 +54,8 @@ class NeuralNetMLP(object):
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
                  l1=0.0, l2=0.0, epochs=2000, eta=0.015,
                  alpha=0.0, decrease_const=0.0, shuffle=False,
+                 l1=0.0, l2=0.0, epochs=1000, eta=0.0012,
+                 alpha=0.4, decrease_const=0.0, shuffle=True,
                  minibatches=1, random_state=None):
 
         np.random.seed(random_state)
@@ -248,7 +250,7 @@ class NeuralNetMLP(object):
         y_pred = a3
         return y_pred
 
-    def fit(self, X, y, print_progress=True):
+    def fit(self, X, y, print_progress=False):
         """ Learn weights from training data.
 
         Parameters
@@ -282,7 +284,7 @@ class NeuralNetMLP(object):
 
             if self.shuffle:
                 idx = np.random.permutation(y_data.shape[0]) #wybiera losowy wiersz
-                X_data, y_data = X_data[idx], y_data[:, idx] # [idx] - wybiera wylosowany wiersz,
+                X_data, y_data = X_data[idx], y_data[idx] # [idx] - wybiera wylosowany wiersz,
                 #  [:,x] - wybiera wylosowana kolumne
             
             mini = np.array_split(range(y_data.shape[0]), self.minibatches)#od parametru minibatches zalezy czy
@@ -311,8 +313,4 @@ class NeuralNetMLP(object):
                 self.w1 -= (delta_w1 + (self.alpha * delta_w1_prev))
                 self.w2 -= (delta_w2 + (self.alpha * delta_w2_prev))
                 delta_w1_prev, delta_w2_prev = delta_w1, delta_w2
-        plt.plot(self.cost_)
-        plt.xlabel('Epochs')
-        plt.ylabel('Cost function value')
-        plt.show()
         return self
