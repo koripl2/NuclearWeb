@@ -15,7 +15,7 @@ Created on 20.04.2017
 def main():
         data_collector = DataCollector()
 
-        net = NeuralNetMLP(n_hidden=8, epochs = 2000)
+        net = NeuralNetMLP(n_hidden=8,  epochs =1000)
         net.fit(data_collector.X[0:350], data_collector.y[0:350])
         y_calibr = data_collector.y[350:]
         y_net = net.predict(data_collector.X[:][350:])

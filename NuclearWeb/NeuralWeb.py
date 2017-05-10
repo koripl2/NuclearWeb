@@ -7,53 +7,36 @@ import matplotlib.pyplot as plt
 Based on https://github.com/rasbt/python-machine-learning-book/blob/master/code/ch12/ch12.ipynb
 '''
 class NeuralNetMLP(object):
-    """ Feedforward neural network / Multi-layer perceptron classifier.
+    """ Siec do przewidywania ceny nieruchomosci na podstawie 13 parametrow
 
-    Parameters
+    Parametry
     ------------
     n_output : int
-        Number of output units, should be equal to the
-        number of unique class labels.
+        Liczba neuronow wyjsciowych - 1 (tyle ile zmiennych objasniajacych
     n_features : int
-        Number of features (dimensions) in the target dataset.
-        Should be equal to the number of columns in the X array.
+        Liczba parametrow wejsciowych
     n_hidden : int (default: 30)
-        Number of hidden units.
-    l1 : float (default: 0.0)
-        Lambda value for L1-regularization.
-        No regularization if l1=0.0 (default)
-    l2 : float (default: 0.0)
-        Lambda value for L2-regularization.
-        No regularization if l2=0.0 (default)
-    epochs : int (default: 500)
-        Number of passes over the training set.
+        Liczba neuronow w warstwie ukrytej
+    epochs : int (default: 1000)
+        Liczba krokow algorytmu uczacego
     eta : float (default: 0.001)
-        Learning rate.
+        Wspolczynnik szybkosci uczenia
     alpha : float (default: 0.0)
-        Momentum constant. Factor multiplied with the
-        gradient of the previous epoch t-1 to improve
-        learning speed
+        Wspolczynnik bezwladnosci
         w(t) := w(t) - (grad(t) + alpha*grad(t-1))
-    decrease_const : float (default: 0.0)
-        Decrease constant. Shrinks the learning rate
-        after each epoch via eta / (1 + epoch*decrease_const)
-    shuffle : bool (default: True)
-        Shuffles training data every epoch if True to prevent circles.
     minibatches : int (default: 1)
         Divides training data into k minibatches for efficiency.
-        Normal gradient descent learning if k=1 (default).
     random_state : int (default: None)
-        Set random state for shuffling and initializing the weights.
+        Uzywany do inicjalizowania wag losowymi wartosciami
 
-    Attributes
+    Atrybuty
     -----------
     cost_ : list
-      Sum of squared errors after each epoch.
+      Przechowuje srednia wartosc funkcji kosztu w kolejnych iteracjach
 
     """
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
-                 l1=0.0, l2=0.0, epochs=1000, eta=0.0012,
-                 alpha=0.4, decrease_const=0.0, shuffle=True,
+                 epochs=1000, eta=0.0012, alpha=0.0, shuffle=True,
                  minibatches=1, random_state=None):
 
         np.random.seed(random_state)
@@ -61,18 +44,15 @@ class NeuralNetMLP(object):
         self.n_features = n_features
         self.n_hidden = n_hidden
         self.w1, self.w2 = self._initialize_weights()
-        self.l1 = l1
-        self.l2 = l2
         self.epochs = epochs
         self.eta = eta
         self.alpha = alpha
-        self.decrease_const = decrease_const
         self.shuffle = shuffle
         self.minibatches = minibatches
 
 
     def _initialize_weights(self):
-        """Initialize weights with small random numbers."""
+        """Inicjalizuje wagi wartosciami losowymi o rozkladzie jednostajnym na przedziala [-1;1]"""
         w1 = np.random.uniform(-1.0, 1.0,
                                size=self.n_hidden*(self.n_features + 1)) #rozkład jednostajny
         w1 = w1.reshape(self.n_hidden, self.n_features + 1) #z wektora formuje macierz o zadanych ksztaltach
@@ -84,22 +64,20 @@ class NeuralNetMLP(object):
         return w1, w2
 
     def _sigmoid(self, z):
-        """Compute logistic function (sigmoid)
-
-        Uses scipy.special.expit to avoid overflow
-        error for very small input values z.
-
+        """Oblicza wartosc sigmoidalnej funkcji aktywacji neuronu
+        Uzywa gotowej implementacji funkcji sigmoidalnej z biblioteki scipy.special
         """
-        # return 1.0 / (1.0 + np.exp(-z))
         return expit(z)
 
     def _sigmoid_gradient(self, z):
-        """Compute gradient of the logistic function"""
+        """Oblicza wartosc pochodnej funkcji sigmoidalnej"""
         sg = self._sigmoid(z)
         return sg * (1.0 - sg)
 
     def _add_bias_unit(self, X, how='column'):
-        """Add bias unit (column or row of 1s) to array at index 0"""
+        """Dodaje do wektora wejsciowego kolumne jedynek, w celu dodania polaryzacji,
+        kazda z jedynek jest pozniej mnozona przez odpowiednia wage
+        """
         #zakladamy, ze wejscie polaryzacji jest zawsze jedynka i od przypisanej wagi zalezy wlasciwa wartosc polaryzacji
         if how == 'column':
             X_new = np.ones((X.shape[0], X.shape[1] + 1))
@@ -112,29 +90,29 @@ class NeuralNetMLP(object):
         return X_new
 
     def _feedforward(self, X, w1, w2):
-        """Compute feedforward step
+        """Wyznacza wartosc aktywacji kolejnych warst na podstawie zadanego wejscia
 
-        Parameters
+        Parametry
         -----------
         X : array, shape = [n_samples, n_features]
-            Input layer with original features.
+            Warstwa wejsciowa
         w1 : array, shape = [n_hidden_units, n_features]
-            Weight matrix for input layer -> hidden layer.
+            Wagi polaczen warstwy wejsciowej
         w2 : array, shape = [n_output_units, n_hidden_units]
-            Weight matrix for hidden layer -> output layer.
+            Wagi polaczen warstwy ukrytej
 
-        Returns
+        Zwraca
         ----------
         a1 : array, shape = [n_samples, n_features+1]
-            Input values with bias unit.
+            Wartosci wejscia wraz z polaryzacja
         z2 : array, shape = [n_hidden, n_samples]
-            Net input of hidden layer.
+            Wyjsie warstwy wejsciowej
         a2 : array, shape = [n_hidden+1, n_samples]
-            Activation of hidden layer.
-        z3 : array, shape = [n_output_units, n_samples]
-            Net input of output layer.
+            Wyjscie warstwy ukrytej
+        z3 : array, shape = [1, n_samples]
+            Wejscie neuronu wyjsciowego
         a3 : array, shape = [n_output_units, n_samples]
-            Activation of output layer.
+            Wyjscie neuronu wyjsciowego
 
         """
         a1 = self._add_bias_unit(X, how='column')
@@ -145,63 +123,53 @@ class NeuralNetMLP(object):
         a3 = self._sigmoid(z3)
         return a1, z2, a2, z3, a3
 
-    def _L2_reg(self, lambda_, w1, w2):
-        """Compute L2-regularization cost"""
-        return (lambda_/2.0) * (np.sum(w1[:, 1:] ** 2) +
-                                np.sum(w2[:, 1:] ** 2))
-
-    def _L1_reg(self, lambda_, w1, w2):
-        """Compute L1-regularization cost"""
-        return (lambda_/2.0) * (np.abs(w1[:, 1:]).sum() +
-                                np.abs(w2[:, 1:]).sum())
 
     def _get_cost(self, d, output, w1, w2):
-        """Compute cost function.
+        """Oblicza wartosc funkcji kosztu korzystajac z funkcji kross entropii
 
-        Parameters
+        Parametry
         ----------
         d : array, shape = (1, n_samples)
-        output : array, shape = [n_output_units, n_samples]
-            Activation of the output layer (feedforward)
+             Wartosci pozadane dla poszczegolnych wektorow uczacych.
+        output : array, shape = (1, n_samples)
+             Wartosc na wyjsciu.    
         w1 : array, shape = [n_hidden_units, n_features]
-            Weight matrix for input layer -> hidden layer.
+            Wagi od warstwy wejsciowej do ukrytej.
         w2 : array, shape = [n_output_units, n_hidden_units]
-            Weight matrix for hidden layer -> output layer.
+            Wagi od warstwy ukrytej do wyjsciowej.
 
-        Returns
+        Zwraca
         ---------
         cost : float
-            Regularized cost.
 
         """
         term1 = -d * (np.log(output))
         term2 = (1.0 - d) * np.log(1.0 - output)
         cost = (np.sum(term1 - term2)/len(d))
-        L1_term = self._L1_reg(self.l1, w1, w2)
-        L2_term = self._L2_reg(self.l2, w1, w2)
-        cost = cost + L1_term + L2_term
         return cost
 
     def _get_gradient(self, a1, a2, a3, z2, d, w1, w2):
-        """ Compute gradient step using backpropagation.
+        """ Wyznacza kierunek najwiekszego spadku bledu uzywajac algorytmu propagacji wstecznej
 
-        Parameters
+        Parametry
         ------------
         a1 : array, shape = [n_samples, n_features+1]
-            Input values with bias unit.
+            Wartosci wejscia wraz z polaryzacja 
         a2 : array, shape = [n_hidden+1, n_samples]
-            Activation of hidden layer.
+            Wyjscie warstwy ukrytej
         a3 : array, shape = [n_output_units, n_samples]
-            Activation of output layer.
+            Wyjscie neuronu wyjsciowego
         z2 : array, shape = [n_hidden, n_samples]
-            Net input of hidden layer.
+            Wyjsie warstwy wejsciowej
+        z3 : array, shape = [1, n_samples]
+            Wejscie neuronu wyjsciowego  
         d : array, shape = (1, n_samples)
+             Wartosci pozadane dla poszczegolnych wektorow uczacych.
         w1 : array, shape = [n_hidden_units, n_features]
-            Weight matrix for input layer -> hidden layer.
+            Wagi od warstwy wejsciowej do ukrytej.
         w2 : array, shape = [n_output_units, n_hidden_units]
-            Weight matrix for hidden layer -> output layer.
-
-        Returns
+            Wagi od warstwy ukrytej do wyjsciowej.
+        Zwraca
         ---------
         grad1 : array, shape = [n_hidden_units, n_features]
             Gradient of the weight matrix w1.
@@ -209,7 +177,7 @@ class NeuralNetMLP(object):
             Gradient of the weight matrix w2.
 
         """
-        # backpropagation
+        # propagacja wsteczna
         sigma3 = a3 - d
         z2 = self._add_bias_unit(z2, how='row')
         sigma2 = w2.T.dot(sigma3) * self._sigmoid_gradient(z2)
@@ -217,26 +185,20 @@ class NeuralNetMLP(object):
         grad1 = sigma2.dot(a1)
         grad2 = sigma3.dot(a2.T)
 
-        # regularize
-        grad1[:, 1:] += self.l2 * w1[:, 1:]
-        grad1[:, 1:] += self.l1 * np.sign(w1[:, 1:])
-        grad2[:, 1:] += self.l2 * w2[:, 1:]
-        grad2[:, 1:] += self.l1 * np.sign(w2[:, 1:])
-
         return grad1, grad2
 
     def predict(self, X):
-        """Predict class labels
+        """Wyznacza unormowana wartosc ceny nieruchomosci dla zadanego wektora wejsciowego
 
-        Parameters
+        Parametry
         -----------
         X : array, shape = [n_samples, n_features]
-            Input layer with original features.
+            Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
 
-        Returns:
+        Zwraca:
         ----------
         y_pred : array, shape = [n_samples]
-            Predicted class labels.
+            Przewidywana cena.
 
         """
         if len(X.shape) != 2:
@@ -249,19 +211,18 @@ class NeuralNetMLP(object):
         return y_pred
 
     def fit(self, X, y, print_progress=False):
-        """ Learn weights from training data.
+        """ Dopasowuje wartosci wag sieci do wprowadzonych danych uczacych.
 
-        Parameters
+        Parametry
         -----------
         X : array, shape = [n_samples, n_features]
-            Input layer with original features.
+            Wejscie warsty wejsciowej - 13 wartosci opisujacych nieruchomosc.
         y : array, shape = [n_samples]
-            Target class labels.
+            Docelowe wartosci warstwy wyjsciowej.
         print_progress : bool (default: False)
-            Prints progress as the number of epochs
-            to stderr.
+            Drukuje na wyjsciu bledow ile probek zostalo przetworzonych
 
-        Returns:
+        Zwraca:
         ----------
         self
 
@@ -272,9 +233,6 @@ class NeuralNetMLP(object):
         delta_w2_prev = np.zeros(self.w2.shape)
 
         for i in range(self.epochs):
-
-            # adaptive learning rate
-            self.eta /= (1 + self.decrease_const*i)
 
             if print_progress:
                 sys.stderr.write('\rEpoch: %d/%d' % (i+1, self.epochs))
