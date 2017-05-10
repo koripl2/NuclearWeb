@@ -14,12 +14,8 @@ Created on 20.04.2017
 '''
 def main():
         data_collector = DataCollector()
-
         net = NeuralNetMLP()
-        net.fit(data_collector.X[0:350], data_collector.y[0:350])
-        y=[]
-        y = net.predict(data_collector.X[350:])
-        z = data_collector.y[350:]-y
+        net.fit(data_collector.X, data_collector.y)
         
 
         net = NeuralNetMLP(n_hidden=8)

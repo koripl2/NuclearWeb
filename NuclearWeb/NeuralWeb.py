@@ -52,7 +52,7 @@ class NeuralNetMLP(object):
 
     """
     def __init__(self, n_output=1, n_features=13, n_hidden=8,
-                 l1=0.0, l2=0.0, epochs=1000, eta=0.001,
+                 l1=0.0, l2=0.0, epochs=2000, eta=0.015,
                  alpha=0.0, decrease_const=0.0, shuffle=False,
                  minibatches=1, random_state=None):
 
