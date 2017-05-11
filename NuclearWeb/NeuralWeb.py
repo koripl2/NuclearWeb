@@ -177,10 +177,15 @@ class NeuralNetMLP(object):
         #wartosci sigm zgodne ze wzorami
         sigma3 = a3 - d
         z2 = self._add_bias_unit(z2, how='row')
+        # w2 oraz sigma sa to array typu [[w1,w2,...]]
+        # wywolanie funkcji dot na arrayach tego typu (gdzie jednego transponujemy) sprawia, ze dostajemy
+        # macierz gdzie pod indeksem [i][j] znajduje sie wynik mnozenia i-tego czynnika pierwszej macierzy oraz
+        # j-tego czynnika drugiej macierzy
         sigma2 = w2.T.dot(sigma3) * self._sigmoid_gradient(z2)
         sigma2 = sigma2[1:, :] #w2.T.dot(sigma3) - blad warstwy ukrytej,
         #pomnozone przez gradient f.akt dla liczenia zmian wag
         #uciety bias
+        e = sigma2.dot(a1);
         delta_w1 = self.eta*sigma2.dot(a1) #zmiana wag w.ukrytej
         delta_w2 = self.eta*sigma3.dot(a2.T) #zmiana wag w.wyjsciowej
 
